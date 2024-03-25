@@ -20,12 +20,12 @@ from tensorflow.keras import regularizers
 
 class Autoencoder_Model():
 
-    def __init__(self) -> None:
+    def __init__(self, tensorboard_callback) -> None:
         #%load_ext tensorboard
         print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
         log_dir = "content/logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
-        tensorboard_callback = tf.keras.callbacks.TensorBoard(
+        self.tensorboard_callback = tf.keras.callbacks.TensorBoard(
                                                             log_dir = log_dir, 
                                                             histogram_freq = 1, 
                                                             profile_batch = (10, 100))
@@ -54,18 +54,20 @@ class Autoencoder_Model():
         return autoencoder
     
 
-    def start_train(autoencoder, 
+    def start_train(self,
+                    autoencoder, 
                     train_data, 
                     test_data, 
                     valid_data, 
-                    tensorboard_callback):
+                    save_filepath):
         
         history = autoencoder.fit(
             train_data, test_data,
             shuffle = True,
             epochs = 150,
             batch_size = 200,
-            callbacks = [tensorboard_callback],
+            callbacks = [self.tensorboard_callback],
             validation_data=(valid_data, valid_data))
         
-        
+        tf.keras.models.save_model(autoencoder,
+                                   save_filepath)
