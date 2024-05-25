@@ -5,99 +5,105 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import datetime
+import keras
+import tensorflow
 
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder, RobustScaler, StandardScaler
-from sklearn.impute import SimpleImputer
-from sklearn.datasets import make_classification
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
 
-from tensorflow.keras import layers
-from tensorflow.keras import regularizers
+# from sklearn.model_selection import train_test_split
+# from sklearn.preprocessing import OneHotEncoder, RobustScaler, StandardScaler
+# from sklearn.impute import SimpleImputer
+# from sklearn.datasets import make_classification
+# from sklearn.decomposition import PCA
+# from sklearn.manifold import TSNE
 
 
 
 class Autoencoder_Model():
-
 
     def __init__(self, tensorboard_callback) -> None:
         #%load_ext tensorboard
         print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
         log_dir = "content/logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
-        self.tensorboard_callback = tf.keras.callbacks.TensorBoard(
+        self.tensorboard_callback = keras.callbacks.TensorBoard(
                                                             log_dir = log_dir, 
                                                             histogram_freq = 1, 
                                                             profile_batch = (10, 100))
-        
-        self.status: bool
 
 
-    def createModel(self,
-                    imput_data: pd.DataFrame, 
-                    save_filepath) -> bool:
+
+    @classmethod
+    def create_default_model(self,
+                    input_dim: int,
+                    save_filepath) -> keras.Model:
 
         status_log = ["Create model has successfull", "Create model has error"]
 
-        try:
-            input_dim = len(imput_data)
-            autoencoder = tf.keras.models.Sequential([
-            tf.keras.layers.Dense(input_dim, activation='elu', input_shape=(input_dim, )), 
-            tf.keras.layers.Dense(18, activation='elu'),
-            tf.keras.layers.Dense(12, activation='elu'),
-            tf.keras.layers.Dense(6, activation='elu'),
-            tf.keras.layers.Dense(2, activation='elu'),
-            
-            # reconstruction / decode
-            tf.keras.layers.Dense(6, activation='elu'),
-            tf.keras.layers.Dense(12, activation='elu'),
-            tf.keras.layers.Dense(18, activation='elu'),
-            tf.keras.layers.Dense(input_dim, activation='elu')])
+        autoencoder_compressing = keras.models.Sequential([
+            keras.layers.Dense(input_dim, activation='elu', input_shape=(input_dim, )),
+            keras.layers.Dense(24, activation='elu'),
+            keras.layers.Dense(22, activation='elu'),
+            keras.layers.Dense(20, activation='elu'),
+            keras.layers.Dense(18, activation='elu'),
+            keras.layers.Dense(16, activation='elu'),
+            keras.layers.Dense(14, activation='elu'),
+            keras.layers.Dense(12, activation='elu'),
+            keras.layers.Dense(10, activation='elu'),
 
-            autoencoder.compile(optimizer = "adam", 
-                                    loss = "mse",
-                                    metrics = ["acc"])
-            
-            tf.keras.models.save_model(autoencoder,
-                                    save_filepath)
-            
-            print(status_log[0])
-            self.status = True
-            return self.status
+            keras.layers.Dense(10, activation='elu'),
+            keras.layers.Dense(12, activation='elu'),
+            keras.layers.Dense(14, activation='elu'),
+            keras.layers.Dense(16, activation='elu'),
+            keras.layers.Dense(18, activation='elu'),
+            keras.layers.Dense(20, activation='elu'),
+            keras.layers.Dense(22, activation='elu'),
+            keras.layers.Dense(24, activation='elu'),
+            keras.layers.Dense(input_dim, activation='elu')
+        ])
+
+        autoencoder_compressing.compile(optimizer = "adam",
+                            loss = ["mse"],
+                            metrics = "acc")
+
+        autoencoder_compressing.summary()
         
-        except[]:
-            print(status_log[1])
-            self.status = False
-            return self.status 
-    
+        return autoencoder_compressing
 
+
+
+    @classmethod
     def start_train(self,
-                    autoencoder, 
-                    train_data, 
-                    test_data, 
-                    valid_data, 
-                    save_filepath) -> bool:
+                    model: keras.Model,
+                    train_data: np.array,
+                    valid_data: np.array,
+                    epochs = 150,
+                    batch_size = 200,) -> keras.Model:
         
         status_log = ["Train successfull", "Train error"]
         
-        try:
-            history = autoencoder.fit(
-                train_data, test_data,
-                shuffle = True,
-                epochs = 150,
-                batch_size = 200,
-                callbacks = [self.tensorboard_callback],
-                validation_data=(valid_data, valid_data))
-            
-            tf.keras.models.save_model(autoencoder,
-                                    save_filepath)
-            
-            print(status_log[0])
-            self.status = True
-            return self.status
+        history = model.fit(
+            train_data, valid_data,
+            shuffle = True,
+            epochs = epochs,
+            batch_size = batch_size,
+            callbacks = [self.tensorboard_callback],
+            validation_data=(valid_data, valid_data))
+
+        return model
+
+
+
+    @classmethod
+    def save_model(model: keras.Model,
+                   save_filepath: str):
         
-        except[]:
-            print(status_log[1])
-            self.status = False
-            return self.status
+        keras.saving.save_model(model,
+                                save_filepath)
+        
+    
+
+    @classmethod
+    def load_model(load_filepath: str):
+        new_model = keras.saving.load_model(load_filepath, custom_objects=None, compile=True, safe_mode=True)
+
+        return new_model
