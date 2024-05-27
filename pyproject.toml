@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "train_and_valid_model"
+version = "0.0.1"
+authors = [
+  { name="DZ" },
+]
+
+description = "package from train and validation"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/Dimitriy200/TrainAutoencoder"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/train"]

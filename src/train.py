@@ -25,17 +25,16 @@ class Autoencoder_Model():
         print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
         log_dir = "content/logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
-        self.tensorboard_callback = keras.callbacks.TensorBoard(
-                                                            log_dir = log_dir, 
-                                                            histogram_freq = 1, 
-                                                            profile_batch = (10, 100))
+        tensorboard_callback = keras.callbacks.TensorBoard(log_dir = log_dir, 
+                                                           histogram_freq = 1, 
+                                                           profile_batch = (10, 100))
 
 
 
     @classmethod
     def create_default_model(self,
                     input_dim: int,
-                    save_filepath) -> keras.Model:
+                    save_filepath: str) -> keras.models.Model:
 
         status_log = ["Create model has successfull", "Create model has error"]
 
@@ -72,6 +71,28 @@ class Autoencoder_Model():
 
 
     @classmethod
+    def stert_validate(self,
+                        model: keras.models.Model,
+                        x_x: np.array,
+                        y_y: np.array,
+                        batch_size = 200,
+                        log_dir = "content/logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")):
+        
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
+                                                              histogram_freq=1,
+                                                              profile_batch = (10,100))
+
+        res = model.predict(
+            x = x_x,
+            y = y_y,
+            batch_size = batch_size,
+            callbacks = [tensorboard_callback])
+        
+        return res
+
+
+
+    @classmethod
     def start_train(self,
                     model: keras.Model,
                     train_data: np.array,
@@ -94,7 +115,7 @@ class Autoencoder_Model():
 
 
     @classmethod
-    def save_model(model: keras.Model,
+    def save_model(model: keras.models.Model,
                    save_filepath: str):
         
         keras.saving.save_model(model,
@@ -104,6 +125,9 @@ class Autoencoder_Model():
 
     @classmethod
     def load_model(load_filepath: str):
-        new_model = keras.saving.load_model(load_filepath, custom_objects=None, compile=True, safe_mode=True)
+        new_model = keras.saving.load_model(load_filepath,
+                                            custom_objects=None,
+                                            compile=True,
+                                            safe_mode=True)
 
         return new_model
