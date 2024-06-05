@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=40.8.0"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "train_and_valid_model"
-version = "0.0.4"
+version = "0.0.10"
 authors = [
   { name="DZ" },
 ]
@@ -12,6 +12,14 @@ authors = [
 description = "package from train and validation"
 readme = "README.md"
 requires-python = ">=3.8"
+
+dependencies = [
+  "numpy>=1.26.4",
+  "keras>=2.0.0",
+  "tensorflow>=2.16.1",
+  "scikit-learn>=1.4.1",
+]
+
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",

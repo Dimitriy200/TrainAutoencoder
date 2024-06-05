@@ -18,3 +18,9 @@ res = mod.start_all_processes(train_data,
                         predict_data)
 
 print(res)
+
+# classifiers = [
+#     "Programming Language :: Python :: 3",
+#     "License :: OSI Approved :: MIT License",
+#     "Operating System :: OS Independent",
+# ]

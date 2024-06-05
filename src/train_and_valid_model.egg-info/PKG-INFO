@@ -1,0 +1,53 @@
+Metadata-Version: 2.1
+Name: train_and_valid_model
+Version: 0.0.10
+Summary: package from train and validation
+Author: DZ
+Project-URL: Homepage, https://github.com/Dimitriy200/TrainAutoencoder
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.26.4
+Requires-Dist: keras>=2.0.0
+Requires-Dist: tensorflow>=2.16.1
+Requires-Dist: scikit-learn>=1.4.1
+
+## Дом проекта
+
+## Autoencoder_Model
+
+- `create_default_model()` - Создает простую модель по умолчанию с тремя внутренними слоями **16 -> 10 -> 16**. Возвращаемое значение - `keras.Model`.
+    Параметры:
+    - `input_dim: int` - Размер входного слоя. По умолчанию равен 26.
+
+
+- `start_train()` - Запускает обучение модели. Возвращаемое значение - `keras.Model`.
+    Параметры:
+    - `model: keras.Model` - Модель, которую необходимо обучить. Возвращаемое значение - `keras.Model`.
+    - `train_data: np.array` - Данные для обучения.
+    - `valid_data: np.array` - Данные для валидации.
+
+
+- `start_active_validate` - Валидация модели. Возвращает MSE и RMSE в видесловаря. Возвращаемое значение - `dict`.
+    Параметры:
+    - `model: keras.models.Model` - Модель, к которой применяется валидация.
+    - `x_x: np.array` - Входные валидационные данные.
+    - `y_y: np.array` - Метки данных. В данном случае: `x_x = y_y`
+
+
+- `save_model` - Сериализация модели. Возвращаемое значение - `void`.
+    Параметры:
+    - `model: keras.models.Model` - Модель, которую необходимо сериализовать.
+    - `save_filepath: str` - Путь к сохраняемой папке.
+
+
+- `load_model` - Загружает сериализованные модели из дирректории. Возвращаемое значение - `keras.Model`.
+    Параметры:
+    - `load_filepath: str` - Путь до файла модели.
+
+
+- `get_np_arr_from_csv()` - Получает массив **numpy** из **csv** файла. Возвращаемое значение - `np.array`.
+    Параметры:
+    - `path_cfv: str` - путь до **csv** файла.

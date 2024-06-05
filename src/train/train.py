@@ -17,18 +17,16 @@ from numpy import genfromtxt
 # from sklearn.decomposition import PCA
 # from sklearn.manifold import TSNE
 
-import glob
+# import glob
 import numpy as np
-import pandas as pd
 # import plotly.express as px
 # import plotly.graph_objs as go
 # import plotly as pl
-import seaborn as sns
-import matplotlib.pyplot as plt
+
 import tensorflow as tf
 import datetime
 import keras
-import os
+# import os
 
 
 from sklearn.model_selection import train_test_split

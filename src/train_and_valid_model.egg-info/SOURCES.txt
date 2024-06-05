@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+src/train/__init__.py
+src/train/test1.py
+src/train/train.py
+src/train_and_valid_model.egg-info/PKG-INFO
+src/train_and_valid_model.egg-info/SOURCES.txt
+src/train_and_valid_model.egg-info/dependency_links.txt
+src/train_and_valid_model.egg-info/requires.txt
+src/train_and_valid_model.egg-info/top_level.txt
+tests/test_1.py
