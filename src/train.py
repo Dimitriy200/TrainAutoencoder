@@ -7,8 +7,9 @@ import tensorflow as tf
 import datetime
 import keras
 import tensorflow
+import os
 
-
+from numpy import genfromtxt
 # from sklearn.model_selection import train_test_split
 # from sklearn.preprocessing import OneHotEncoder, RobustScaler, StandardScaler
 # from sklearn.impute import SimpleImputer
@@ -32,31 +33,17 @@ class Autoencoder_Model():
 
 
     @classmethod
-    def create_default_model(self,
-                    input_dim: int,
-                    save_filepath: str) -> keras.models.Model:
+    def create_default_model(self, input_dim: int = 26) -> keras.Model:
 
         status_log = ["Create model has successfull", "Create model has error"]
 
         autoencoder_compressing = keras.models.Sequential([
             keras.layers.Dense(input_dim, activation='elu', input_shape=(input_dim, )),
-            keras.layers.Dense(24, activation='elu'),
-            keras.layers.Dense(22, activation='elu'),
-            keras.layers.Dense(20, activation='elu'),
-            keras.layers.Dense(18, activation='elu'),
             keras.layers.Dense(16, activation='elu'),
-            keras.layers.Dense(14, activation='elu'),
-            keras.layers.Dense(12, activation='elu'),
-            keras.layers.Dense(10, activation='elu'),
 
             keras.layers.Dense(10, activation='elu'),
-            keras.layers.Dense(12, activation='elu'),
-            keras.layers.Dense(14, activation='elu'),
+            
             keras.layers.Dense(16, activation='elu'),
-            keras.layers.Dense(18, activation='elu'),
-            keras.layers.Dense(20, activation='elu'),
-            keras.layers.Dense(22, activation='elu'),
-            keras.layers.Dense(24, activation='elu'),
             keras.layers.Dense(input_dim, activation='elu')
         ])
 
@@ -67,28 +54,6 @@ class Autoencoder_Model():
         autoencoder_compressing.summary()
         
         return autoencoder_compressing
-
-
-
-    @classmethod
-    def stert_validate(self,
-                        model: keras.models.Model,
-                        x_x: np.array,
-                        y_y: np.array,
-                        batch_size = 200,
-                        log_dir = "content/logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")):
-        
-        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
-                                                              histogram_freq=1,
-                                                              profile_batch = (10,100))
-
-        res = model.predict(
-            x = x_x,
-            y = y_y,
-            batch_size = batch_size,
-            callbacks = [tensorboard_callback])
-        
-        return res
 
 
 
@@ -115,6 +80,44 @@ class Autoencoder_Model():
 
 
     @classmethod
+    def start_active_validate(self,
+                        model: keras.Model,
+                        x_x: np.array,
+                        y_y: np.array,
+                        batch_size = 200,
+                        log_dir = os.path.join("content/logs/", datetime.datetime.now().strftime("%Y%m%d-%H%M%S")) # logs for tensoboaed
+                        ) -> dict :
+        
+        res = {}
+
+        tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir,
+                                                              histogram_freq=1,
+                                                              profile_batch = (10,100))
+
+        MSE = keras.losses.mean_squared_error(x_x, y_y)
+        RMSE = keras.metrics.RootMeanSquaredError()
+        RMSE.update_state(x_x, y_y)
+
+        res["MSE"] = MSE
+        res["RMSE"] = RMSE
+        
+        return res
+
+
+
+    @classmethod
+    def start_static_validate(self, 
+                              model: keras.models.Model,
+                              x_x: np.array,
+                              y_y: np.array,):
+        
+        res = 0
+
+        return res
+
+
+
+    @classmethod
     def save_model(model: keras.models.Model,
                    save_filepath: str):
         
@@ -124,10 +127,16 @@ class Autoencoder_Model():
     
 
     @classmethod
-    def load_model(load_filepath: str):
+    def load_model(load_filepath: str) -> keras.models.Model:
         new_model = keras.saving.load_model(load_filepath,
                                             custom_objects=None,
                                             compile=True,
                                             safe_mode=True)
 
         return new_model
+
+
+
+    @classmethod
+    def get_np_arr_from_csv(path_cfv: str) -> np.array:
+        return genfromtxt(path_cfv, delimiter=',')
