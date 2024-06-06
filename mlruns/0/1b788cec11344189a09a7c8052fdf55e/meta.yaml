@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/0/1b788cec11344189a09a7c8052fdf55e/artifacts
+end_time: 1717689556419
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 1b788cec11344189a09a7c8052fdf55e
+run_name: salty-mole-716
+run_uuid: 1b788cec11344189a09a7c8052fdf55e
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1717689549715
+status: 3
+tags: []
+user_id: b2f0c254c7b2bf7bce5f11580c01d1c606da143c

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: train_and_valid_model
-Version: 0.1.4
+Version: 0.2.0
 Summary: package from train and validation
 Author: DZ
 Project-URL: Homepage, https://github.com/Dimitriy200/TrainAutoencoder
@@ -13,6 +13,8 @@ Requires-Dist: numpy>=1.22.1
 Requires-Dist: scikit-learn
 Requires-Dist: setuptools==57.5.0
 Requires-Dist: tensorflow==2.16.1
+Requires-Dist: mlflow==2.13.2
+Requires-Dist: dagshub==0.3.27
 
 ## Дом проекта
 

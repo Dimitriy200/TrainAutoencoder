@@ -13,11 +13,16 @@ print(train_data)
  
 
 mod = Autoencoder_Model()
-res = mod.start_all_processes(train_data,
+metrics, model = mod.start_all_processes(train_data,
                         train_data,
-                        predict_data)
+                        predict_data,
+                        name_experiment = "exp 3")
 
-print(res)
+res = metrics["RMSE"]
+
+print(f"RMSE = {res}")
+
+
 
 # classifiers = [
 #     "Programming Language :: Python :: 3",
