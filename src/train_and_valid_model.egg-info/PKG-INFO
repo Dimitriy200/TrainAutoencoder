@@ -1,18 +1,18 @@
 Metadata-Version: 2.1
 Name: train_and_valid_model
-Version: 0.0.10
+Version: 0.1.4
 Summary: package from train and validation
 Author: DZ
 Project-URL: Homepage, https://github.com/Dimitriy200/TrainAutoencoder
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
-Requires-Python: >=3.8
+Requires-Python: >=3.8.0
 Description-Content-Type: text/markdown
-Requires-Dist: numpy>=1.26.4
-Requires-Dist: keras>=2.0.0
-Requires-Dist: tensorflow>=2.16.1
-Requires-Dist: scikit-learn>=1.4.1
+Requires-Dist: numpy>=1.22.1
+Requires-Dist: scikit-learn
+Requires-Dist: setuptools==57.5.0
+Requires-Dist: tensorflow==2.16.1
 
 ## Дом проекта
 

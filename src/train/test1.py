@@ -24,3 +24,8 @@ print(res)
 #     "License :: OSI Approved :: MIT License",
 #     "Operating System :: OS Independent",
 # ]
+
+# "scipy>=1.6.0",
+# "joblib>=1.2.0",
+# "threadpoolctl>=3.1.0",
+# "numpy>=1.19.5",

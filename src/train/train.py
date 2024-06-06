@@ -25,10 +25,10 @@ import numpy as np
 
 import tensorflow as tf
 import datetime
-import keras
+# import keras
 # import os
 
-
+from tensorflow import keras
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, RobustScaler, StandardScaler
 from sklearn.impute import SimpleImputer

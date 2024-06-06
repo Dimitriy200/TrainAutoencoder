@@ -3,6 +3,7 @@ pyproject.toml
 src/train/__init__.py
 src/train/test1.py
 src/train/train.py
+src/train/__pycache__/train.cpython-311.pyc
 src/train_and_valid_model.egg-info/PKG-INFO
 src/train_and_valid_model.egg-info/SOURCES.txt
 src/train_and_valid_model.egg-info/dependency_links.txt
