@@ -1,5 +1,6 @@
 import numpy as np
-import tensorflow as tf
+import keras
+# import tensorflow as tf
 import datetime
 import mlflow
 import subprocess
@@ -20,6 +21,8 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from mlflow.models import infer_signature
 
+# from tensorflow import keras
+
 # mlflow server --host 127.0.0.1 --port 5050
 
 
@@ -27,8 +30,9 @@ from mlflow.models import infer_signature
 class Autoencoder_Model():
 
     def __init__(self) -> None:
+        pass
         #%load_ext tensorboard
-        print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+        # print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
         
 
         # tensorboard_callback = keras.callbacks.TensorBoard(log_dir = log_dir, 
@@ -99,18 +103,18 @@ class Autoencoder_Model():
 
     @classmethod
     def create_default_model(self,
-                             input_dim: int = 26) -> tf.keras.Model:
+                             input_dim: int = 26) -> keras.Model:
 
         status_log = ["Create model has successfull", "Create model has error"]
 
-        autoencoder_compressing = tf.keras.models.Sequential([
-            tf.keras.layers.Dense(input_dim, activation='elu', input_shape=(input_dim, )),
-            tf.keras.layers.Dense(16, activation='elu'),
+        autoencoder_compressing = keras.models.Sequential([
+            keras.layers.Dense(input_dim, activation='elu', input_shape=(input_dim, )),
+            keras.layers.Dense(16, activation='elu'),
 
-            tf.keras.layers.Dense(10, activation='elu'),
+            keras.layers.Dense(10, activation='elu'),
             
-            tf.keras.layers.Dense(16, activation='elu'),
-            tf.keras.layers.Dense(input_dim, activation='elu')
+            keras.layers.Dense(16, activation='elu'),
+            keras.layers.Dense(input_dim, activation='elu')
         ])
 
         autoencoder_compressing.compile(optimizer = "adam",
@@ -125,20 +129,20 @@ class Autoencoder_Model():
 
     @classmethod
     def start_train(self,
-                    model: tf.keras.Model,
+                    model: keras.Model,
                     train_data: np.array,
                     valid_data: np.array,
                     params,
                     epochs = 5,
-                    batch_size = 150,) -> tf.keras.Model:
+                    batch_size = 150,) -> keras.Model:
         
         status_log = ["Train successfull", "Train error"]
-        print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+        # print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
         log_dir = "content/logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, 
-                                                              histogram_freq=1, 
-                                                              profile_batch = (10,100))
+        # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, 
+        #                                                       histogram_freq=1, 
+        #                                                       profile_batch = (10,100))
         
         # dagshub.init(repo_owner='Dimitriy200', repo_name='diplom_autoencoder', mlflow=True)
         # mlflow.set_tracking_uri("https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow")    #https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow
@@ -149,12 +153,12 @@ class Autoencoder_Model():
         # # mlflow.start_run()
         # # mlflow.log_params(params)
 
-            
+
         history = model.fit(train_data, valid_data,
                             shuffle = True,
                             epochs = epochs,
                             batch_size = batch_size,
-                            callbacks = [tensorboard_callback],
+                            # callbacks = [tensorboard_callback],
                             validation_data=(valid_data, valid_data))
 
             # mlflow.log_metric('RMSE', meric)
@@ -168,7 +172,7 @@ class Autoencoder_Model():
     
 
     @classmethod
-    def start_predict_model(self, model: tf.keras.Model,
+    def start_predict_model(self, model: keras.Model,
                             Predict_data: np.array,
                             batch_size: int = 200) -> np.array:
 
@@ -189,10 +193,10 @@ class Autoencoder_Model():
         #                                                       histogram_freq=1,
         #                                                       profile_batch = (10,100))
 
-        MSE = tf.keras.metrics.MeanSquaredError()
+        MSE = keras.metrics.MeanSquaredError()
         MSE.update_state(x_x, y_y)
         # RMSE = tf.keras.losses.mean_squared_error(x_x, y_y)
-        RMSE = tf.keras.metrics.RootMeanSquaredError()
+        RMSE = keras.metrics.RootMeanSquaredError()
         RMSE.update_state(x_x, y_y)
 
         res["MSE"] = MSE.result()
@@ -206,10 +210,10 @@ class Autoencoder_Model():
 
     @classmethod
     def check_loss(self, inp_DF, res_DF):
-        MSE     = tf.keras.losses.mean_squared_error(inp_DF, res_DF)
-        RMSE    = tf.keras.metrics.RootMeanSquaredError()
-        R2      = tf.keras.metrics.MeanSquaredLogarithmicError()
-        MAPE    = tf.keras.metrics.R2Score()
+        MSE     = keras.losses.mean_squared_error(inp_DF, res_DF)
+        RMSE    = keras.metrics.RootMeanSquaredError()
+        R2      = keras.metrics.MeanSquaredLogarithmicError()
+        MAPE    = keras.metrics.R2Score()
 
         RMSE.update_state(inp_DF, res_DF)
         R2.update_state(inp_DF, res_DF)
@@ -220,7 +224,7 @@ class Autoencoder_Model():
 
     @classmethod
     def start_static_validate(self, 
-                              model: tf.keras.models.Model,
+                              model: keras.models.Model,
                               x_x: np.array,
                               y_y: np.array,):
         
@@ -231,17 +235,17 @@ class Autoencoder_Model():
 
 
     @classmethod
-    def save_model(self, model: tf.keras.Model,
+    def save_model(self, model: keras.Model,
                    save_filepath: str):
         
-        tf.keras.saving.save_model(model,
+        keras.saving.save_model(model,
                                 save_filepath)
         
     
 
     @classmethod
-    def load_model(self, load_filepath: str) -> tf.keras.Model:
-        new_model = tf.keras.saving.load_model(load_filepath,
+    def load_model(self, load_filepath: str) -> keras.Model:
+        new_model = keras.saving.load_model(load_filepath,
                                             custom_objects=None,
                                             compile=True,
                                             safe_mode=True)
@@ -251,7 +255,7 @@ class Autoencoder_Model():
 
     @classmethod
     def save_model_in_MLFlow(self,
-                             model: tf.keras.Model,
+                             model: keras.Model,
                              params,
                              metric,
                              X_train,

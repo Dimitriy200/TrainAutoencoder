@@ -33,4 +33,4 @@ print(f"RMSE = {res}")
 # "scipy>=1.6.0",
 # "joblib>=1.2.0",
 # "threadpoolctl>=3.1.0",
-# "numpy>=1.19.5",
+#   "numpy>=1.22.1",
