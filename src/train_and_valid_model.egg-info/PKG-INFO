@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: train_and_valid_model
-Version: 0.2.6
+Version: 0.2.7
 Summary: package from train and validation
 Author: DZ
 Project-URL: Homepage, https://github.com/Dimitriy200/TrainAutoencoder
