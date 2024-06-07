@@ -312,6 +312,20 @@ class Autoencoder_Model():
 
 
     @classmethod
+    def load_model_from_MlFlow(self,
+                               uri: str = "https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow",
+                               name_model: str = "autoencoder2",
+                               version_model = "latest"):
+        mlflow.set_tracking_uri(uri)
+        model_uri = f'models:/{name_model}/{version_model}'
+        model = mlflow.keras.load_model(model_uri)
+
+        print(model.summary())
+
+        return model
+
+
+    @classmethod
     def get_np_arr_from_csv(self, path_cfv: str) -> np.array:
         res = genfromtxt(path_cfv, delimiter=',')
         return res
