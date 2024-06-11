@@ -21,6 +21,7 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from mlflow.models import infer_signature
 
+
 # from tensorflow import keras
 
 # mlflow server --host 127.0.0.1 --port 5050
@@ -194,10 +195,10 @@ class Autoencoder_Model():
         #                                                       profile_batch = (10,100))
 
         MSE = keras.metrics.MeanSquaredError()
-        MSE.update_state(x_x, y_y)
+        MSE.update_state(x_x, x_x)
         # RMSE = tf.keras.losses.mean_squared_error(x_x, y_y)
         RMSE = keras.metrics.RootMeanSquaredError()
-        RMSE.update_state(x_x, y_y)
+        RMSE.update_state(x_x, x_x)
 
         res["MSE"] = MSE.result()
         res["RMSE"] = RMSE.result()
@@ -317,9 +318,13 @@ class Autoencoder_Model():
 
     @classmethod
     def load_model_from_MlFlow(self,
+                               token,
                                uri: str = "https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow",
                                name_model: str = "autoencoder2",
-                               version_model = "latest"):
+                               version_model = "latest",):
+        
+        dagshub.init(repo_owner='Dimitriy200', repo_name='diplom_autoencoder', mlflow=True)
+        
         mlflow.set_tracking_uri(uri)
         model_uri = f'models:/{name_model}/{version_model}'
         model = mlflow.keras.load_model(model_uri)
