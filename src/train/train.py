@@ -1,3 +1,4 @@
+import dagshub.auth
 import numpy as np
 import keras
 # import tensorflow as tf
@@ -5,6 +6,7 @@ import datetime
 import mlflow
 import subprocess
 import dagshub
+import os
 
 
 # from tensorflow import keras
@@ -20,7 +22,7 @@ from sklearn.datasets import make_classification
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from mlflow.models import infer_signature
-
+from mlflow.environment_variables import MLFLOW_TRACKING_USERNAME, MLFLOW_TRACKING_PASSWORD, MLFLOW_TRACKING_TOKEN, MLFLOW_TRACKING_AUTH
 
 # from tensorflow import keras
 
@@ -46,17 +48,19 @@ class Autoencoder_Model():
                             path_Train_data: str,
                             path_Valid_Data: str,
                             path_Predict_Data: str, #Должно быть 2 строки данныъ. Первую можно заполнить нулями
-                            name_experiment:str,
-                            url_to_mlFLow_server: str = "http://127.0.0.1:5050",
+                            name_experiment: str,
+                            mlfl_tr_username,
                             url_to_remote_storage: str = "https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow",
                             repo_owner = 'Dimitriy200',
                             repo_name = 'diplom_autoencoder'):
         
+        os.environ['MLFLOW_TRACKING_USERNAME'] = mlfl_tr_username
+
         standart_test_params = {
             "Model": "Autoencoder",
             "max_iter": 150,
         }
-        
+
         Train_data = self.get_np_arr_from_csv(path_Train_data)
         Valid_Data = self.get_np_arr_from_csv(path_Valid_Data)
         Predict_data = self.get_np_arr_from_csv(path_Predict_Data)
@@ -101,7 +105,6 @@ class Autoencoder_Model():
         return  metrics, new_train_model
 
 
-
     @classmethod
     def create_default_model(self,
                              input_dim: int = 26) -> keras.Model:
@@ -125,7 +128,6 @@ class Autoencoder_Model():
         autoencoder_compressing.summary()
         
         return autoencoder_compressing
-
 
 
     @classmethod
@@ -170,7 +172,6 @@ class Autoencoder_Model():
 
         return model
 
-    
 
     @classmethod
     def start_predict_model(self, model: keras.Model,
@@ -179,7 +180,6 @@ class Autoencoder_Model():
 
         return model.predict(Predict_data)
         
-
 
     @classmethod
     def start_active_validate(self,
@@ -208,7 +208,6 @@ class Autoencoder_Model():
         return res
 
 
-
     @classmethod
     def check_loss(self, inp_DF, res_DF):
         MSE     = keras.losses.mean_squared_error(inp_DF, res_DF)
@@ -234,7 +233,6 @@ class Autoencoder_Model():
         return res
 
 
-
     @classmethod
     def save_model(self, model: keras.Model,
                    save_filepath: str):
@@ -242,7 +240,6 @@ class Autoencoder_Model():
         keras.saving.save_model(model,
                                 save_filepath)
         
-    
 
     @classmethod
     def load_model(self, load_filepath: str) -> keras.Model:
@@ -260,7 +257,10 @@ class Autoencoder_Model():
                              params,
                              metric,
                              X_train,
-                             X_test):
+                             X_test,
+                             mlfl_tr_username):
+        
+        os.environ['MLFLOW_TRACKING_USERNAME'] = mlfl_tr_username
 
         dagshub.init(repo_owner='Dimitriy200', repo_name='diplom_autoencoder', mlflow=True)
         mlflow.set_tracking_uri("https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow")    #https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow
@@ -318,16 +318,26 @@ class Autoencoder_Model():
 
     @classmethod
     def load_model_from_MlFlow(self,
-                               token,
+                               dagshub_toc_username,
+                               dagshub_toc_pass,
+                               dagshub_toc_tocen,
                                uri: str = "https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow",
                                name_model: str = "autoencoder2",
                                version_model = "latest",):
         
+        os.environ['MLFLOW_TRACKING_USERNAME'] = dagshub_toc_username
+        os.environ['MLFLOW_TRACKING_PASSWORD'] = dagshub_toc_pass
+        os.environ['MLFLOW_TRACKING_TOKEN'] = dagshub_toc_tocen
+
+        dagshub.auth.add_app_token(token=dagshub_toc_tocen)
+
         dagshub.init(repo_owner='Dimitriy200', repo_name='diplom_autoencoder', mlflow=True)
-        
         mlflow.set_tracking_uri(uri)
+
         model_uri = f'models:/{name_model}/{version_model}'
-        model = mlflow.keras.load_model(model_uri)
+
+        with mlflow.start_run():
+            model = mlflow.keras.load_model(model_uri)
 
         print(model.summary())
 

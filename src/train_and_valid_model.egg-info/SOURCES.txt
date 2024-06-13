@@ -1,5 +1,7 @@
 README.md
 pyproject.toml
+dist/train_and_valid_model-0.2.15-py3-none-any.whl
+dist/train_and_valid_model-0.2.15.tar.gz
 mlruns/0/meta.yaml
 mlruns/0/1b788cec11344189a09a7c8052fdf55e/meta.yaml
 mlruns/0/1b788cec11344189a09a7c8052fdf55e/params/Model
