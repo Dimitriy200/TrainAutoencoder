@@ -131,31 +131,40 @@ class Autoencoder_Model():
 
 
     @classmethod
+    def add_train(self,
+                  path_to_train,
+                  path_to_valid,
+                  dagshub_toc_username,
+                  dagshub_toc_pass,
+                  dagshub_toc_tocen,
+                  epochs = 5,
+                  batch_size = 50,
+                  name_model: str = "autoencoder2"):
+        
+        train_data = self.get_np_arr_from_csv(path_to_train)
+        valid_data = self.get_np_arr_from_csv(path_to_valid)
+        
+        model = self.load_model_from_MlFlow(dagshub_toc_username=dagshub_toc_username,
+                                            dagshub_toc_pass=dagshub_toc_pass,
+                                            dagshub_toc_tocen=dagshub_toc_tocen,)
+        new_model = self.start_train(model=model,
+                                     train_data = train_data,
+                                     valid_data = valid_data)
+        
+        return new_model
+        
+
+    @classmethod
     def start_train(self,
                     model: keras.Model,
                     train_data: np.array,
                     valid_data: np.array,
-                    params,
                     epochs = 5,
                     batch_size = 150,) -> keras.Model:
         
         status_log = ["Train successfull", "Train error"]
-        # print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
         log_dir = "content/logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, 
-        #                                                       histogram_freq=1, 
-        #                                                       profile_batch = (10,100))
-        
-        # dagshub.init(repo_owner='Dimitriy200', repo_name='diplom_autoencoder', mlflow=True)
-        # mlflow.set_tracking_uri("https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow")    #https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow
-        # mlflow.set_experiment("New Experiment")
-
-        # mlflow.set_tracking_uri(uri="http://127.0.0.1:5050")
-
-        # # mlflow.start_run()
-        # # mlflow.log_params(params)
-
 
         history = model.fit(train_data, valid_data,
                             shuffle = True,
@@ -163,12 +172,6 @@ class Autoencoder_Model():
                             batch_size = batch_size,
                             # callbacks = [tensorboard_callback],
                             validation_data=(valid_data, valid_data))
-
-            # mlflow.log_metric('RMSE', meric)
-            # mlflow.log_param('Epochs', '150')
-
-        
-        # mlflow.end_run()
 
         return model
 
@@ -178,7 +181,8 @@ class Autoencoder_Model():
                             Predict_data: np.array,
                             batch_size: int = 200) -> np.array:
 
-        return model.predict(Predict_data)
+        res = model.predict(Predict_data)
+        return res
         
 
     @classmethod
@@ -231,24 +235,6 @@ class Autoencoder_Model():
         res = 0
 
         return res
-
-
-    @classmethod
-    def save_model(self, model: keras.Model,
-                   save_filepath: str):
-        
-        keras.saving.save_model(model,
-                                save_filepath)
-        
-
-    @classmethod
-    def load_model(self, load_filepath: str) -> keras.Model:
-        new_model = keras.saving.load_model(load_filepath,
-                                            custom_objects=None,
-                                            compile=True,
-                                            safe_mode=True)
-
-        return new_model
 
 
     @classmethod
@@ -343,6 +329,56 @@ class Autoencoder_Model():
 
         return model
 
+
+    @classmethod
+    def choise_barrier(self,
+                       path_imp_data: str,
+                       path_out_data: str,
+                       model: keras.Model):
+        
+        barrier_line = 0
+
+        list_data = os.listdir(path_imp_data)
+
+        choise_normal = self.get_np_arr_from_csv(os.path.join(path_imp_data, list_data[0]))
+        control_normal = self.get_np_arr_from_csv(os.path.join(path_imp_data, list_data[1]))
+        choise_anomal = self.get_np_arr_from_csv(os.path.join(path_imp_data, list_data[2]))
+        control_anomal = self.get_np_arr_from_csv(os.path.join(path_imp_data, list_data[3]))
+        
+        # Объединяем данные для подбора и контроля барьера
+        choise_barrier = np.concatenate(choise_normal, choise_anomal)
+        control_barrier = np.concatenate(control_normal, control_anomal)
+
+        # 8. цикл для каждого положения разделяющей поверхности от mse min до mse max делать:
+        #   { для кадого объекта определяем считать его нормальным или аномальным в соответствии с положением разд поверхности
+        #     для каждого объекта определяем: к какому классу ошибок он относится. TP FP TN FN.
+        #     расчитываем метрику для датасета.
+        #     запоминаем знач метрики соответсв данному положению разд поверхн}
+
+        # Прогоняем данные через обученную модель
+        predicted_data = self.start_predict_model(model = model,
+                                                  Predict_data = control_barrier)
+
+        return barrier_line
+
+
+    @classmethod
+    def save_model(self, model: keras.Model,
+                   save_filepath: str):
+        
+        keras.saving.save_model(model,
+                                save_filepath)
+        
+
+    @classmethod
+    def load_model(self, load_filepath: str) -> keras.Model:
+        new_model = keras.saving.load_model(load_filepath,
+                                            custom_objects=None,
+                                            compile=True,
+                                            safe_mode=True)
+
+        return new_model
+    
 
     @classmethod
     def get_np_arr_from_csv(self, path_cfv: str) -> np.array:
