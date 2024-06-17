@@ -52,7 +52,7 @@ class Autoencoder_Model():
                                     name_experiment: str,
                                     mlfl_tr_username,
                                     url_to_remote_storage: str = "https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow",
-                                    repo_owner = 'Dimitriy200',
+                                    repo_owner = '',
                                     repo_name = 'diplom_autoencoder',
                                     registered_model_name = "autoencoder_3",
                                     epochs = 5,
@@ -115,18 +115,16 @@ class Autoencoder_Model():
 
         status_log = ["Create model has successfull", "Create model has error"]
         r2 = keras.metrics.R2Score()
-        rmse = keras.metrics.RootMeanSquaredError()
+        rmse = keras.metrics.RootMeanSquaredError(name = "rmse")
 
         autoencoder_compressing = keras.models.Sequential([
-            keras.layers.Dense(input_dim, activation='relu', input_shape=(input_dim, )),
-            keras.layers.Dense(20, activation='elu'),
+            keras.layers.Dense(input_dim, activation='elu', input_shape=(input_dim, )),
             keras.layers.Dense(16, activation='elu'),
-
+            
             keras.layers.Dense(10, activation='elu'),
             
             keras.layers.Dense(16, activation='elu'),
-            keras.layers.Dense(20, activation='elu'),
-            keras.layers.Dense(input_dim, activation='relu')
+            keras.layers.Dense(input_dim, activation='elu')
         ])
 
         autoencoder_compressing.compile(optimizer = "adam",
@@ -271,7 +269,7 @@ class Autoencoder_Model():
                              metrics_name: str,
                              epochs: str,
                              url_to_remote_storage: str = "https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow",
-                             repo_owner: str = 'Dimitriy200',
+                             repo_owner: str = '',
                              repo_name: str = 'diplom_autoencoder'):
         
         os.environ['MLFLOW_TRACKING_USERNAME'] = mlfl_tracking_username
@@ -390,13 +388,32 @@ class Autoencoder_Model():
 
         all_mse = np.concatenate([metrics_mse_Normal, metrics_mse_Anomal])
 
-        sort_all_mse = np.sort(all_mse, kind = 'mergesort')
+        # sort_all_mse = np.sort(all_mse, kind = 'mergesort')
 
-        # for barrier in sort_all_mse:
-            
+        barrier_line = np.array((max(rsh_metrics_mse_Anomal[:, 0]) + min(rsh_metrics_mse_Normal[:, 0])) / 2)
+        logging.info(f"barrier_line = {barrier_line}")
+        
+        all_mse = np.concatenate([rsh_metrics_mse_Normal, rsh_metrics_mse_Anomal], axis=0)
+
+        valid_arr = []
+        for mse in rsh_metrics_mse_Anomal[:, 0]:
+            if mse < barrier_line:
+                valid_arr.append(1)
+            else:
+                valid_arr.append(0)
+        
+        # logging.info(f"valid_arr = {valid_arr}")
+
+        
+        np_valid_arr = np.array(valid_arr)
+        d_valid_arr = np.atleast_2d(np_valid_arr)
+        rsh_valid_arr = np.rot90(d_valid_arr, k= 1)
+
+        mse_met_anom = np.column_stack((rsh_metrics_mse_Anomal, rsh_valid_arr))
+        logging.info(f"np_valid_arr = {mse_met_anom}")
 
 
-        return rsh_metrics_mse_Normal, rsh_metrics_mse_Anomal
+        return rsh_metrics_mse_Normal, rsh_metrics_mse_Anomal, mse_met_anom
 
 
     @classmethod
@@ -415,7 +432,7 @@ class Autoencoder_Model():
                                             safe_mode=True)
 
         return new_model
-    
+
 
     @classmethod
     def get_np_arr_from_csv(self, path_cfv: str) -> np.array:

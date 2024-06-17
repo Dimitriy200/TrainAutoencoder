@@ -1,50 +1,61 @@
-2024-06-16 23:42:34,727 INFO None
-2024-06-16 23:42:36,242 INFO Initialized MLflow to track repo "Dimitriy200/diplom_autoencoder"
-2024-06-16 23:42:36,244 INFO Repository Dimitriy200/diplom_autoencoder initialized!
-2024-06-16 23:42:37,681 INFO START TRAIN, PARAMETRES: EPOCHS = 80
-BATCH_SIZE = 200, 
- TRAIN_DATA_SIZE = (59976, 26)
-2024-06-16 23:44:10,399 INFO START PREDICT
-2024-06-16 23:44:11,891 INFO RMSE = 0.7675334811210632
-2024-06-16 23:44:11,891 INFO NP_RMSE = 0.7675334811210632
-2024-06-16 23:44:28,616 WARNING The added token already exists in the token cache, skipping
-2024-06-16 23:44:29,366 INFO Initialized MLflow to track repo "Dimitriy200/diplom_autoencoder"
-2024-06-16 23:44:29,367 INFO Repository Dimitriy200/diplom_autoencoder initialized!
-2024-06-16 23:44:34,713 INFO INPUR DATA: 
-choise_Normal = (21326, 26)
-control_Normal = (5332, 26)
-choise_Anomal = (21327, 26)
-control_Anomal = (5332, 26)
-2024-06-16 23:44:34,714 INFO START PREDICT
-2024-06-16 23:44:35,198 INFO START PREDICT
-2024-06-16 23:44:35,549 INFO METRICS: 
-np_mse_Normal = [0.7872159  0.1596718  0.15772988 ... 0.18244956 0.8211083  0.0216889 ]
-np_mse_Aormal = [0.12170588 0.13287878 2.73988    ... 0.8112932  0.75068134 0.74795   ]
- shapes = (5332,)
-2024-06-16 23:44:35,549 INFO metrics_Norm = (5332,)
-2024-06-16 23:44:35,551 INFO METRICS: 
+2024-06-18 02:26:47,127 WARNING The added token already exists in the token cache, skipping
+2024-06-18 02:26:48,612 INFO Initialized MLflow to track repo "Dimitriy200/diplom_autoencoder"
+2024-06-18 02:26:48,614 INFO Repository Dimitriy200/diplom_autoencoder initialized!
+2024-06-18 02:26:55,892 INFO INPUR DATA: 
+choise_Normal = (16789, 26)
+control_Normal = (4198, 26)
+choise_Anomal = (16789, 26)
+control_Anomal = (4198, 26)
+2024-06-18 02:26:55,892 INFO START PREDICT
+2024-06-18 02:26:56,348 INFO START PREDICT
+2024-06-18 02:26:56,634 INFO METRICS: 
+np_mse_Normal = [0.00701586 0.00671645 0.00663031 ... 0.03115959 0.03120364 0.00421723]
+np_mse_Aormal = [0.00223087 0.00291946 0.00219317 ... 0.0342623  0.0332462  0.80616564]
+ shapes = (4198,)
+2024-06-18 02:26:56,634 INFO metrics_Norm = (4198,)
+2024-06-18 02:26:56,635 INFO METRICS: 
 metrics_mse_Normal = 
-[[0.78721589 0.1596718  0.15772988 ... 0.18244956 0.82110828 0.0216889 ]
+[[0.00701586 0.00671645 0.00663031 ... 0.03115959 0.03120364 0.00421723]
  [1.         1.         1.         ... 1.         1.         1.        ]]
 metrics_mse_Anomal = 
-[[0.12170588 0.13287878 2.73988008 ... 0.81129318 0.75068134 0.74795002]
+[[0.00223087 0.00291946 0.00219317 ... 0.0342623  0.0332462  0.80616564]
  [0.         0.         0.         ... 0.         0.         0.        ]]
-shapes = (2, 5332)
-2024-06-16 23:44:35,552 INFO RSHPE METRICS: 
+shapes = (2, 4198)
+2024-06-18 02:26:56,635 INFO RSHPE METRICS: 
 metrics_mse_Normal = 
-[[0.0216889  1.        ]
- [0.82110828 1.        ]
- [0.18244956 1.        ]
+[[0.00421723 1.        ]
+ [0.03120364 1.        ]
+ [0.03115959 1.        ]
  ...
- [0.15772988 1.        ]
- [0.1596718  1.        ]
- [0.78721589 1.        ]]
+ [0.00663031 1.        ]
+ [0.00671645 1.        ]
+ [0.00701586 1.        ]]
 metrics_mse_Anomal = 
-[[0.74795002 0.        ]
- [0.75068134 0.        ]
- [0.81129318 0.        ]
+[[0.80616564 0.        ]
+ [0.0332462  0.        ]
+ [0.0342623  0.        ]
  ...
- [2.73988008 0.        ]
- [0.13287878 0.        ]
- [0.12170588 0.        ]]
-2024-06-16 23:44:35,557 INFO all_mse shape = (10664, 2)
+ [0.00219317 0.        ]
+ [0.00291946 0.        ]
+ [0.00223087 0.        ]]
+2024-06-18 02:26:56,636 INFO barrier_line = 0.43635621410794556
+2024-06-18 02:26:56,643 INFO np_valid_arr = [[0.80616564 0.         1.        ]
+ [0.0332462  0.         1.        ]
+ [0.0342623  0.         1.        ]
+ ...
+ [0.00219317 0.         1.        ]
+ [0.00291946 0.         1.        ]
+ [0.00223087 0.         0.        ]]
+2024-06-18 02:26:56,644 INFO all_mse shape = (8396, 2)
+2024-06-18 02:26:56,845 INFO all_mse = [[0.00421723 1.        ]
+ [0.03120364 1.        ]
+ [0.03115959 1.        ]
+ ...
+ [0.00219317 0.        ]
+ [0.00291946 0.        ]
+ [0.00223087 0.        ]], 
+indexses = [   1    2    3 ... 8394 8395 8396]
+2024-06-18 02:26:56,845 INFO all_mse = (8396, 2) 
+indexses = (8396,)
+2024-06-18 02:26:56,846 INFO big_all_mse = (8228, 2) 
+small_all_mse = (168, 2)
