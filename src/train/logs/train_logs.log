@@ -1,0 +1,50 @@
+2024-06-16 23:42:34,727 INFO None
+2024-06-16 23:42:36,242 INFO Initialized MLflow to track repo "Dimitriy200/diplom_autoencoder"
+2024-06-16 23:42:36,244 INFO Repository Dimitriy200/diplom_autoencoder initialized!
+2024-06-16 23:42:37,681 INFO START TRAIN, PARAMETRES: EPOCHS = 80
+BATCH_SIZE = 200, 
+ TRAIN_DATA_SIZE = (59976, 26)
+2024-06-16 23:44:10,399 INFO START PREDICT
+2024-06-16 23:44:11,891 INFO RMSE = 0.7675334811210632
+2024-06-16 23:44:11,891 INFO NP_RMSE = 0.7675334811210632
+2024-06-16 23:44:28,616 WARNING The added token already exists in the token cache, skipping
+2024-06-16 23:44:29,366 INFO Initialized MLflow to track repo "Dimitriy200/diplom_autoencoder"
+2024-06-16 23:44:29,367 INFO Repository Dimitriy200/diplom_autoencoder initialized!
+2024-06-16 23:44:34,713 INFO INPUR DATA: 
+choise_Normal = (21326, 26)
+control_Normal = (5332, 26)
+choise_Anomal = (21327, 26)
+control_Anomal = (5332, 26)
+2024-06-16 23:44:34,714 INFO START PREDICT
+2024-06-16 23:44:35,198 INFO START PREDICT
+2024-06-16 23:44:35,549 INFO METRICS: 
+np_mse_Normal = [0.7872159  0.1596718  0.15772988 ... 0.18244956 0.8211083  0.0216889 ]
+np_mse_Aormal = [0.12170588 0.13287878 2.73988    ... 0.8112932  0.75068134 0.74795   ]
+ shapes = (5332,)
+2024-06-16 23:44:35,549 INFO metrics_Norm = (5332,)
+2024-06-16 23:44:35,551 INFO METRICS: 
+metrics_mse_Normal = 
+[[0.78721589 0.1596718  0.15772988 ... 0.18244956 0.82110828 0.0216889 ]
+ [1.         1.         1.         ... 1.         1.         1.        ]]
+metrics_mse_Anomal = 
+[[0.12170588 0.13287878 2.73988008 ... 0.81129318 0.75068134 0.74795002]
+ [0.         0.         0.         ... 0.         0.         0.        ]]
+shapes = (2, 5332)
+2024-06-16 23:44:35,552 INFO RSHPE METRICS: 
+metrics_mse_Normal = 
+[[0.0216889  1.        ]
+ [0.82110828 1.        ]
+ [0.18244956 1.        ]
+ ...
+ [0.15772988 1.        ]
+ [0.1596718  1.        ]
+ [0.78721589 1.        ]]
+metrics_mse_Anomal = 
+[[0.74795002 0.        ]
+ [0.75068134 0.        ]
+ [0.81129318 0.        ]
+ ...
+ [2.73988008 0.        ]
+ [0.13287878 0.        ]
+ [0.12170588 0.        ]]
+2024-06-16 23:44:35,557 INFO all_mse shape = (10664, 2)

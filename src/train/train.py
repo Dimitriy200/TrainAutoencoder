@@ -7,6 +7,7 @@ import mlflow
 import subprocess
 import dagshub
 import os
+import logging
 
 
 # from tensorflow import keras
@@ -35,7 +36,7 @@ class Autoencoder_Model():
     def __init__(self) -> None:
         pass
         #%load_ext tensorboard
-        # print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+        # logging.info("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
         
 
         # tensorboard_callback = keras.callbacks.TensorBoard(log_dir = log_dir, 
@@ -44,15 +45,18 @@ class Autoencoder_Model():
 
 
     @classmethod
-    def start_all_processes(self,
-                            path_Train_data: str,
-                            path_Valid_Data: str,
-                            path_Predict_Data: str, #Должно быть 2 строки данныъ. Первую можно заполнить нулями
-                            name_experiment: str,
-                            mlfl_tr_username,
-                            url_to_remote_storage: str = "https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow",
-                            repo_owner = 'Dimitriy200',
-                            repo_name = 'diplom_autoencoder'):
+    def start_train_and_save_mlflow(self,
+                                    path_Train_data: str,
+                                    path_Valid_Data: str,
+                                    path_Predict_Data: str, #Должно быть 2 строки данныъ. Первую можно заполнить нулями
+                                    name_experiment: str,
+                                    mlfl_tr_username,
+                                    url_to_remote_storage: str = "https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow",
+                                    repo_owner = 'Dimitriy200',
+                                    repo_name = 'diplom_autoencoder',
+                                    registered_model_name = "autoencoder_3",
+                                    epochs = 5,
+                                    batch_size = 80):
         
         os.environ['MLFLOW_TRACKING_USERNAME'] = mlfl_tr_username
 
@@ -61,40 +65,40 @@ class Autoencoder_Model():
             "max_iter": 150,
         }
 
-        Train_data = self.get_np_arr_from_csv(path_Train_data)
-        Valid_Data = self.get_np_arr_from_csv(path_Valid_Data)
-        Predict_data = self.get_np_arr_from_csv(path_Predict_Data)
+        train_data = self.get_np_arr_from_csv(path_Train_data)
+        valid_Data = self.get_np_arr_from_csv(path_Valid_Data)
+        predict_data = self.get_np_arr_from_csv(path_Predict_Data)
 
         new_model = self.create_default_model()
-
 
         dagshub.init(repo_owner=repo_owner, repo_name=repo_name, mlflow=True)
         mlflow.set_tracking_uri(url_to_remote_storage)    #https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow
         mlflow.set_experiment(name_experiment)
-        # mlflow.set_tracking_uri(uri=url_to_mlFLow_server) # https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow/#/experiments/0?searchFilter=&orderByKey=attributes.start_time&orderByAsc=false&startTime=ALL&lifecycleFilter=Active&modelVersionFilter=All+Runs&datasetsFilter=W10%3D
-
+        
         mlflow.keras.autolog()
 
         with mlflow.start_run():
             
-            new_train_model = self.start_train(new_model,
-                                            Train_data,
-                                            Valid_Data,
-                                            params = standart_test_params)
+            new_train_model = self.start_train(model = new_model,
+                                               train_data = train_data,
+                                               valid_data = valid_Data,
+                                               params = standart_test_params,
+                                               epochs = epochs,
+                                               batch_size = batch_size)
             
-            restauriert_data = self.start_predict_model(new_train_model, Predict_data)
+            restauriert_data = self.start_predict_model(new_train_model, predict_data)
 
-            signature = infer_signature(Train_data, restauriert_data)
+            signature = infer_signature(train_data, restauriert_data)
             
-            metrics = self.start_active_validate(restauriert_data,
-                                                Predict_data)
+            rmse = self.get_rmse(x_x_true = predict_data,
+                                y_y_pred = restauriert_data)
 
-            mlflow.log_metric('RMSE', metrics["RMSE"])
-            mlflow.log_param('Epochs', '150')
+            mlflow.log_metric('rmse', rmse)
+            mlflow.log_param('Epochs', epochs)
 
             mlflow.keras.log_model(new_train_model,
-                                   artifact_path='my_models',
-                                   registered_model_name='autoencoder2')
+                                   artifact_path = 'my_models',
+                                   registered_model_name = registered_model_name)
 
             # mlflow.sklearn.log_model(
             #     sk_model=new_train_model,
@@ -102,7 +106,7 @@ class Autoencoder_Model():
             #     signature=signature,
             #     registered_model_name="keras-module-autoencoder")
 
-        return  metrics, new_train_model
+        return new_train_model
 
 
     @classmethod
@@ -110,22 +114,27 @@ class Autoencoder_Model():
                              input_dim: int = 26) -> keras.Model:
 
         status_log = ["Create model has successfull", "Create model has error"]
+        r2 = keras.metrics.R2Score()
+        rmse = keras.metrics.RootMeanSquaredError()
 
         autoencoder_compressing = keras.models.Sequential([
-            keras.layers.Dense(input_dim, activation='elu', input_shape=(input_dim, )),
+            keras.layers.Dense(input_dim, activation='relu', input_shape=(input_dim, )),
+            keras.layers.Dense(20, activation='elu'),
             keras.layers.Dense(16, activation='elu'),
 
             keras.layers.Dense(10, activation='elu'),
             
             keras.layers.Dense(16, activation='elu'),
-            keras.layers.Dense(input_dim, activation='elu')
+            keras.layers.Dense(20, activation='elu'),
+            keras.layers.Dense(input_dim, activation='relu')
         ])
 
         autoencoder_compressing.compile(optimizer = "adam",
                             loss = ["mse"],
-                            metrics = ["acc"])
+                            metrics = [r2, rmse])
 
         autoencoder_compressing.summary()
+        logging.info(autoencoder_compressing.summary())
         
         return autoencoder_compressing
 
@@ -143,10 +152,13 @@ class Autoencoder_Model():
         
         train_data = self.get_np_arr_from_csv(path_to_train)
         valid_data = self.get_np_arr_from_csv(path_to_valid)
+        logging.info(f"train_data = {train_data.shape}")
+        logging.info(f"valid_data = {valid_data.shape}")
         
         model = self.load_model_from_MlFlow(dagshub_toc_username=dagshub_toc_username,
                                             dagshub_toc_pass=dagshub_toc_pass,
-                                            dagshub_toc_tocen=dagshub_toc_tocen,)
+                                            dagshub_toc_tocen=dagshub_toc_tocen)
+        
         new_model = self.start_train(model=model,
                                      train_data = train_data,
                                      valid_data = valid_data)
@@ -159,14 +171,17 @@ class Autoencoder_Model():
                     model: keras.Model,
                     train_data: np.array,
                     valid_data: np.array,
+                    params,
                     epochs = 5,
-                    batch_size = 150,) -> keras.Model:
+                    batch_size = 80,) -> keras.Model:
         
         status_log = ["Train successfull", "Train error"]
 
         log_dir = "content/logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
-        history = model.fit(train_data, valid_data,
+        logging.info(f"START TRAIN, PARAMETRES: EPOCHS = {epochs}\nBATCH_SIZE = {batch_size}, \n TRAIN_DATA_SIZE = {train_data.shape}")
+
+        history = model.fit(train_data, train_data,
                             shuffle = True,
                             epochs = epochs,
                             batch_size = batch_size,
@@ -177,53 +192,64 @@ class Autoencoder_Model():
 
 
     @classmethod
-    def start_predict_model(self, model: keras.Model,
-                            Predict_data: np.array,
+    def start_predict_model(self,
+                            model: keras.Model,
+                            predict_data: np.array,
                             batch_size: int = 200) -> np.array:
 
-        res = model.predict(Predict_data)
+        logging.info("START PREDICT")
+        res = model.predict(predict_data)
         return res
         
 
     @classmethod
-    def start_active_validate(self,
-                        x_x: np.array,
-                        y_y: np.array,
-                        # log_dir = os.path.join("content/logs/", datetime.datetime.now().strftime("%Y%m%d-%H%M%S")) # logs for tensoboaed
-                        ) -> dict :
+    def get_mse(self,
+                x_x_true: np.array,
+                y_y_pred: np.array) -> np.array :
+
+        # MSE = keras.metrics.MeanSquaredError()
+        MSE = keras.losses.mean_squared_error(x_x_true, y_y_pred)
+        # MSE.update_state(x_x, y_y)
         
-        res = {}
+        # res_mse = MSE.result()
+        res_mse_np = np.array(MSE)
+        
+        return res_mse_np
 
-        # tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir,
-        #                                                       histogram_freq=1,
-        #                                                       profile_batch = (10,100))
 
-        MSE = keras.metrics.MeanSquaredError()
-        MSE.update_state(x_x, x_x)
-        # RMSE = tf.keras.losses.mean_squared_error(x_x, y_y)
+    @classmethod
+    def get_rmse(self,
+                x_x_true: np.array,
+                y_y_pred: np.array) :
+        
         RMSE = keras.metrics.RootMeanSquaredError()
-        RMSE.update_state(x_x, x_x)
+        RMSE.update_state(x_x_true, y_y_pred)
 
-        res["MSE"] = MSE.result()
-        res["RMSE"] = RMSE.result()
+        res_rmse = RMSE.result()
+        logging.info(f"RMSE = {res_rmse}")
 
-        print(f"\nRMSE = {res['RMSE']}\n")
-        
-        return res
+
+        np_rmse = np.array(res_rmse)
+        logging.info(f"NP_RMSE = {np_rmse}")
+
+        return np_rmse
 
 
     @classmethod
-    def check_loss(self, inp_DF, res_DF):
-        MSE     = keras.losses.mean_squared_error(inp_DF, res_DF)
-        RMSE    = keras.metrics.RootMeanSquaredError()
+    def get_metrics(self, x_x, y_y):
         R2      = keras.metrics.MeanSquaredLogarithmicError()
         MAPE    = keras.metrics.R2Score()
 
-        RMSE.update_state(inp_DF, res_DF)
-        R2.update_state(inp_DF, res_DF)
-        MAPE.update_state(inp_DF, res_DF)
+        R2.update_state(x_x, y_y)
+        MAPE.update_state(x_x, y_y)
 
-        print("MSE = ", MSE, "\nRMSE = ", RMSE.result(), "\nR2 = ", R2.result(), "\nMAPE = ", MAPE.result())
+        res_r2 = R2.result()
+        res_MAPE = MAPE.result()
+
+        res_R2_np = np.array(res_r2)
+        res_MAPE_np = np.array(res_MAPE)
+
+        return res_R2_np, res_MAPE_np
 
 
     @classmethod
@@ -239,67 +265,37 @@ class Autoencoder_Model():
 
     @classmethod
     def save_model_in_MLFlow(self,
-                             model: keras.Model,
-                             params,
-                             metric,
-                             X_train,
-                             X_test,
-                             mlfl_tr_username):
+                             saved_model: keras.Model,
+                             mlfl_tracking_username: str,
+                             metrics,
+                             metrics_name: str,
+                             epochs: str,
+                             url_to_remote_storage: str = "https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow",
+                             repo_owner: str = 'Dimitriy200',
+                             repo_name: str = 'diplom_autoencoder'):
         
-        os.environ['MLFLOW_TRACKING_USERNAME'] = mlfl_tr_username
+        os.environ['MLFLOW_TRACKING_USERNAME'] = mlfl_tracking_username
 
-        dagshub.init(repo_owner='Dimitriy200', repo_name='diplom_autoencoder', mlflow=True)
-        mlflow.set_tracking_uri("https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow")    #https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow
-
-        mlflow.set_tracking_uri(uri="http://127.0.0.1:5050")
-        mlflow.set_experiment("New Experiment")
+        dagshub.init(repo_owner=repo_owner,
+                     repo_name=repo_name,
+                     mlflow=True)
+        
+        mlflow.set_tracking_uri(url_to_remote_storage)
+        mlflow.set_experiment("New_Experiment_mean_model")
 
         mlflow.start_run()
+        mlflow.keras.autolog()
 
-        # mlflow.log_param("parameter name ", params)
-        # mlflow.log_metric("RMSE", metric)
+        with mlflow.start_run(nested=True):
+
+            mlflow.log_metric(metrics_name, metrics)
+            mlflow.log_param('Epochs', epochs)
+
+            mlflow.keras.log_model(saved_model,
+                                   artifact_path='my_models',
+                                   registered_model_name='autoencoder_main')
 
         mlflow.end_run()
-
-        # with mlflow.start_run():
-
-        #     mlflow.start_run()
-        #     # Log the hyperparameters
-        #     mlflow.log_params(params)
-
-        #     # Log the loss metric
-        #     mlflow.log_metric("accuracy", metric)
-
-        #     # Set a tag that we can use to remind ourselves what this run was for
-        #     mlflow.set_tag("Training Info", "Basic Autoencoder model for iris data")
-
-        #     # Infer the model signature
-        #     signature = infer_signature(X_train, model.predict(X_train))
-
-        #     # Log the model
-        #     model_info = mlflow.sklearn.log_model(
-        #         sk_model=model,
-        #         artifact_path="autoencoder_model",
-        #         signature=signature,
-        #         input_example=X_train,
-        #         registered_model_name="tracking_model",
-        #     )
-
-        #     loaded_model = mlflow.pyfunc.load_model(model_info.model_uri)
-
-        #     predictions = loaded_model.predict(X_test)
-
-        #     iris_feature_names = datasets.load_iris().feature_names
-
-        #     subprocess.run("mlflow server --host 127.0.0.1 --port 8080")
-
-
-            # result = np.array()
-            # (X_test, columns=iris_feature_names)
-            # result["actual_class"] = y_test
-            # result["predicted_class"] = predictions
-
-            # result[:4]
 
 
     @classmethod
@@ -331,23 +327,22 @@ class Autoencoder_Model():
 
 
     @classmethod
-    def choise_barrier(self,
-                       path_imp_data: str,
-                       path_out_data: str,
-                       model: keras.Model):
+    def choise_result_barrier(self,
+                              path_choise_Normal,
+                              path_control_Normal,
+                              path_choise_Anomal,
+                              path_control_Anomal,
+                            #   path_out_data: str,
+                              model: keras.Model):
         
         barrier_line = 0
 
-        list_data = os.listdir(path_imp_data)
+        choise_Normal = self.get_np_arr_from_csv(path_choise_Normal)
+        control_Normal = self.get_np_arr_from_csv(path_control_Normal)
+        choise_Anomal = self.get_np_arr_from_csv(path_choise_Anomal)
+        control_Anomal = self.get_np_arr_from_csv(path_control_Anomal)
 
-        choise_normal = self.get_np_arr_from_csv(os.path.join(path_imp_data, list_data[0]))
-        control_normal = self.get_np_arr_from_csv(os.path.join(path_imp_data, list_data[1]))
-        choise_anomal = self.get_np_arr_from_csv(os.path.join(path_imp_data, list_data[2]))
-        control_anomal = self.get_np_arr_from_csv(os.path.join(path_imp_data, list_data[3]))
-        
-        # Объединяем данные для подбора и контроля барьера
-        choise_barrier = np.concatenate(choise_normal, choise_anomal)
-        control_barrier = np.concatenate(control_normal, control_anomal)
+        logging.info(f"INPUR DATA: \nchoise_Normal = {choise_Normal.shape}\ncontrol_Normal = {control_Normal.shape}\nchoise_Anomal = {choise_Anomal.shape}\ncontrol_Anomal = {control_Anomal.shape}")
 
         # 8. цикл для каждого положения разделяющей поверхности от mse min до mse max делать:
         #   { для кадого объекта определяем считать его нормальным или аномальным в соответствии с положением разд поверхности
@@ -356,10 +351,52 @@ class Autoencoder_Model():
         #     запоминаем знач метрики соответсв данному положению разд поверхн}
 
         # Прогоняем данные через обученную модель
-        predicted_data = self.start_predict_model(model = model,
-                                                  Predict_data = control_barrier)
+        predicted_control_Normal = self.start_predict_model(model = model,
+                                                            predict_data = control_Normal)
+        
+        predicted_data_Anom = self.start_predict_model(model = model,
+                                                       predict_data = control_Anomal)
 
-        return barrier_line
+        # Получаем массив ошибок mse для каждого датасета
+        mse_Normal = self.get_mse(control_Normal, predicted_control_Normal)
+        mse_Aormal = self.get_mse(control_Anomal, predicted_data_Anom)
+
+        np_mse_Normal = np.array(mse_Normal)
+        np_mse_Aormal = np.array(mse_Aormal)
+        
+        # d_np_mse_Normal = np.atleast_2d(np_mse_Normal)
+        # d_np_mse_Normal = np.atleast_2d(np_mse_Aormal)
+        logging.info(f"METRICS: \nnp_mse_Normal = {np_mse_Normal}\nnp_mse_Aormal = {np_mse_Aormal}\n shapes = {np_mse_Normal.shape}")
+        
+        str_df = np_mse_Normal.shape
+
+        # metrics_Norm = np.atleast_2d(np.ones(shape = (str_df)))
+        # metrics_Anom = np.atleast_2d(np.zeros(shape = (str_df)))
+        metrics_Norm = np.ones(shape = (str_df))
+        metrics_Anom = np.zeros(shape = (str_df))
+        logging.info(f"metrics_Norm = {metrics_Norm.shape}")
+
+        # res_metrics_Norm = np.reshape(metrics_Norm, newshape = (str_df,))
+        # res_metrics_Anom = np.reshape(metrics_Anom, newshape = (str_df,))
+        # logging.info(f"METRICS: \nres_metrics_Norm = {res_metrics_Norm} \nres_metrics_Norm = {res_metrics_Anom}\nshape = {res_metrics_Norm.shape}")
+
+        metrics_mse_Normal = np.stack([np_mse_Normal, metrics_Norm])
+        metrics_mse_Anomal = np.stack([np_mse_Aormal, metrics_Anom])
+        logging.info(f"METRICS: \nmetrics_mse_Normal = \n{metrics_mse_Normal}\nmetrics_mse_Anomal = \n{metrics_mse_Anomal}\nshapes = {metrics_mse_Normal.shape}")
+
+        rsh_metrics_mse_Normal = np.rot90(metrics_mse_Normal, k= 1)
+        rsh_metrics_mse_Anomal = np.rot90(metrics_mse_Anomal, k= 1)
+        logging.info(f"RSHPE METRICS: \nmetrics_mse_Normal = \n{rsh_metrics_mse_Normal}\nmetrics_mse_Anomal = \n{rsh_metrics_mse_Anomal}")
+
+        all_mse = np.concatenate([metrics_mse_Normal, metrics_mse_Anomal])
+
+        sort_all_mse = np.sort(all_mse, kind = 'mergesort')
+
+        # for barrier in sort_all_mse:
+            
+
+
+        return rsh_metrics_mse_Normal, rsh_metrics_mse_Anomal
 
 
     @classmethod
