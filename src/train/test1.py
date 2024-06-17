@@ -98,8 +98,8 @@ def check_choise_result_barrier():
     path_imp_data = os.path.join(base_dir, "data", "processed", "search_barrier")
 
     model = tr.load_model_from_MlFlow(dagshub_toc_username = "Dimitriy200",
-                                      dagshub_toc_pass = "RamZaZ3961%",
-                                      dagshub_toc_tocen = "a1482d904ec14cd6e61aa6fcc9df96278dc7c911",
+                                      dagshub_toc_pass = "%",
+                                      dagshub_toc_tocen = "",
                                       name_model = "Barrier_test_model")
 
     mse_Normal, mse_anomal = tr.choise_result_barrier(path_choise_Normal = os.path.join(path_imp_data, "Choise_barrier_Normal.csv"),
