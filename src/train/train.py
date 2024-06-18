@@ -53,7 +53,7 @@ class Autoencoder_Model():
                                     mlfl_tr_username,
                                     url_to_remote_storage: str = "https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow",
                                     repo_owner = '',
-                                    repo_name = 'diplom_autoencoder',
+                                    repo_name = '',
                                     registered_model_name = "autoencoder_3",
                                     epochs = 5,
                                     batch_size = 80):
@@ -311,7 +311,7 @@ class Autoencoder_Model():
 
         dagshub.auth.add_app_token(token=dagshub_toc_tocen)
 
-        dagshub.init(repo_owner='Dimitriy200', repo_name='diplom_autoencoder', mlflow=True)
+        dagshub.init(repo_owner='', repo_name='diplom_autoencoder', mlflow=True)
         mlflow.set_tracking_uri(uri)
 
         model_uri = f'models:/{name_model}/{version_model}'
@@ -352,34 +352,28 @@ class Autoencoder_Model():
         predicted_control_Normal = self.start_predict_model(model = model,
                                                             predict_data = control_Normal)
         
-        predicted_data_Anom = self.start_predict_model(model = model,
+        predicted_control_Anom = self.start_predict_model(model = model,
                                                        predict_data = control_Anomal)
 
         # Получаем массив ошибок mse для каждого датасета
         mse_Normal = self.get_mse(control_Normal, predicted_control_Normal)
-        mse_Aormal = self.get_mse(control_Anomal, predicted_data_Anom)
+        mse_Anomal = self.get_mse(control_Anomal, predicted_control_Anom)
 
         np_mse_Normal = np.array(mse_Normal)
-        np_mse_Aormal = np.array(mse_Aormal)
-        
-        # d_np_mse_Normal = np.atleast_2d(np_mse_Normal)
-        # d_np_mse_Normal = np.atleast_2d(np_mse_Aormal)
-        logging.info(f"METRICS: \nnp_mse_Normal = {np_mse_Normal}\nnp_mse_Aormal = {np_mse_Aormal}\n shapes = {np_mse_Normal.shape}")
+        np_mse_Anomal = np.array(mse_Anomal)
+       
+        logging.info(f"METRICS: \nnp_mse_Normal = {np_mse_Normal}   \nnp_mse_Anomal = {np_mse_Anomal}   \nshapes = {np_mse_Normal.shape}")
         
         str_df = np_mse_Normal.shape
-
-        # metrics_Norm = np.atleast_2d(np.ones(shape = (str_df)))
-        # metrics_Anom = np.atleast_2d(np.zeros(shape = (str_df)))
+        
+        # Нормальные значения = класс 1 
+        # Аномальные значения = класс 0 
         metrics_Norm = np.ones(shape = (str_df))
         metrics_Anom = np.zeros(shape = (str_df))
         logging.info(f"metrics_Norm = {metrics_Norm.shape}")
 
-        # res_metrics_Norm = np.reshape(metrics_Norm, newshape = (str_df,))
-        # res_metrics_Anom = np.reshape(metrics_Anom, newshape = (str_df,))
-        # logging.info(f"METRICS: \nres_metrics_Norm = {res_metrics_Norm} \nres_metrics_Norm = {res_metrics_Anom}\nshape = {res_metrics_Norm.shape}")
-
         metrics_mse_Normal = np.stack([np_mse_Normal, metrics_Norm])
-        metrics_mse_Anomal = np.stack([np_mse_Aormal, metrics_Anom])
+        metrics_mse_Anomal = np.stack([np_mse_Anomal, metrics_Anom])
         logging.info(f"METRICS: \nmetrics_mse_Normal = \n{metrics_mse_Normal}\nmetrics_mse_Anomal = \n{metrics_mse_Anomal}\nshapes = {metrics_mse_Normal.shape}")
 
         rsh_metrics_mse_Normal = np.rot90(metrics_mse_Normal, k= 1)
@@ -387,8 +381,6 @@ class Autoencoder_Model():
         logging.info(f"RSHPE METRICS: \nmetrics_mse_Normal = \n{rsh_metrics_mse_Normal}\nmetrics_mse_Anomal = \n{rsh_metrics_mse_Anomal}")
 
         all_mse = np.concatenate([metrics_mse_Normal, metrics_mse_Anomal])
-
-        # sort_all_mse = np.sort(all_mse, kind = 'mergesort')
 
         barrier_line = np.array((max(rsh_metrics_mse_Anomal[:, 0]) + min(rsh_metrics_mse_Normal[:, 0])) / 2)
         logging.info(f"barrier_line = {barrier_line}")
@@ -401,9 +393,6 @@ class Autoencoder_Model():
                 valid_arr.append(1)
             else:
                 valid_arr.append(0)
-        
-        # logging.info(f"valid_arr = {valid_arr}")
-
         
         np_valid_arr = np.array(valid_arr)
         d_valid_arr = np.atleast_2d(np_valid_arr)
