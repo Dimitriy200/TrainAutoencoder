@@ -85,14 +85,14 @@ def check_start_train_and_save_mlflow():
     ch_bar_Anom =  os.path.join(base_dir, "data", "processed", "search_barrier", "Choise_barrier_Anomal.csv")
 
 
-    new_model = tr.start_train_and_save_mlflow(path_Train_data = ch_bar_Norm,
+    new_model = tr.start_train_and_save_mlflow(path_Train_data = all_normal,
                                                 path_Valid_Data = ch_bar_Anom,
                                                 path_Predict_Data = predict_data,
                                                 name_experiment = "MAIN_EXPERIMENT",
                                                 registered_model_name = "Barrier_test_model",
-                                                mlfl_tr_username = "",
-                                                epochs = 60,
-                                                batch_size = 100)
+                                                mlfl_tr_username = "a1482d904ec14cd6e61aa6fcc9df96278dc7c911",
+                                                epochs = 25,
+                                                batch_size = 50)
 
 # check_start_train_and_save_mlflow()
 
@@ -105,7 +105,7 @@ def scatter_subplots(all_mse: np.array):
     indexses = np.array(range(1, str_mse + 1))
     fig, ax = plt.subplots()
 
-    logging.info(f"all_mse = {all_mse}, \nindexses = {indexses}")
+    # logging.info(f"all_mse = {all_mse}, \nindexses = {indexses}")
     logging.info(f"all_mse = {all_mse.shape} \nindexses = {indexses.shape}")
 
     big_all_mse, small_all_mse = train_test_split(all_mse,
@@ -117,6 +117,8 @@ def scatter_subplots(all_mse: np.array):
     indexses_small = np.array(range(1, str_small_mse + 1))
     logging.info(f"big_all_mse = {big_all_mse.shape} \nsmall_all_mse = {small_all_mse.shape}")
 
+
+    # Рсуем график вместе
     # ax.scatter(all_mse[:, 0],
     #            all_mse[:, 1],
     #            vmin=0)
@@ -125,11 +127,13 @@ def scatter_subplots(all_mse: np.array):
     # plt.xlabel("mse")
     # plt.ylabel("class")
 
+
+    # Рсуем график по отдельности
     ax.scatter(all_mse[:, 0],
                indexses,
                vmin=0)
     
-    plt.title("index and mse -> Anomal")
+    plt.title("index and mse -> Normal")
     plt.xlabel("mse")
     plt.ylabel("index") 
     
@@ -150,36 +154,61 @@ def check_choise_result_barrier():
                                       dagshub_toc_tocen = "",
                                       name_model = "Barrier_test_model")
 
-    mse_Normal, mse_Anomal, mse_met_anom = tr.choise_result_barrier(path_choise_Normal = os.path.join(path_imp_data, "Choise_barrier_Normal.csv"),
+    barr_line, res_eaLL = tr.choise_barrier_line(path_choise_Normal = os.path.join(path_imp_data, "Choise_barrier_Normal.csv"),
                                                       path_control_Normal = os.path.join(path_imp_data, "Control_barrier_Normal.csv"),
                                                       path_choise_Anomal = os.path.join(path_imp_data, "Choise_barrier_Anomal.csv"),        #Satic_validation_Anomal.csv
                                                       path_control_Anomal = os.path.join(path_imp_data, "Control_barrier_Anomal.csv"),      #Satic_validation_Normal.csv
                                                       model = model)
     
-    all_mse = np.concatenate([mse_Normal, mse_Anomal], axis=0)
-    logging.info(f"all_mse shape = {all_mse.shape}")
+    # acc = tr.get_bin_acc(mse_met_All[:, 1],
+    #                      mse_met_All[:, 2])
+    # logging.info(f"ACC = {acc}")
 
-    scatter_subplots(mse_Anomal)
+    # all_mse = np.concatenate([mse_Normal, mse_Anomal], axis=0)
+    # logging.info(f"all_mse shape = {all_mse.shape}")
 
-    mid_Norm = np.mean(mse_Normal)
-    mid_Anom = np.mean(mse_Anomal)
-    logging.info(f"mid_Norm = {mid_Norm}")
-    logging.info(f"mid_Anom = {mid_Anom}")
+    # scatter_subplots(mse_Normal)
+
+    # mid_Norm = np.mean(mse_Normal)
+    # mid_Anom = np.mean(mse_Anomal)
+    # logging.info(f"mid_Norm = {mid_Norm}")
+    # logging.info(f"mid_Anom = {mid_Anom}")
 
 
-    median_Norm = np.median(mse_Normal)
-    median_Aorm = np.median(mse_Anomal)
-    logging.info(f"median_Norm = {median_Norm}")
-    logging.info(f"median_Aorm = {median_Aorm}")
+    # median_Norm = np.median(mse_Normal)
+    # median_Aorm = np.median(mse_Anomal)
+    # logging.info(f"median_Norm = {median_Norm}")
+    # logging.info(f"median_Aorm = {median_Aorm}")
 
-    mode_Norm = stats.mode(mse_Normal)
-    mode_Anom = stats.mode(mse_Anomal)
-    logging.info(f"mode_Norm = {mode_Norm}")
-    logging.info(f"mode_Anom = {mode_Anom}")
+    # mode_Norm = stats.mode(mse_Normal)
+    # mode_Anom = stats.mode(mse_Anomal)
+    # logging.info(f"mode_Norm = {mode_Norm}")
+    # logging.info(f"mode_Anom = {mode_Anom}")
 
-    np.savetxt(os.path.join(base_dir, "data", "raw", "tests", "mse_met_anom.csv"), mse_met_anom, delimiter=',')
+    # np.savetxt(os.path.join(base_dir, "data", "raw", "tests", "mse_met_anom.csv"), res_eaLL, delimiter=',')
 
 check_choise_result_barrier()
+
+# --------------------------------------------------------------------
+
+# --------------------------------------------------------------------
+
+def check_get_class_from_object():
+    tr = Autoencoder_Model()
+
+    model = tr.load_model_from_MlFlow(dagshub_toc_username = "Dimitriy200",
+                                      dagshub_toc_pass = "RamZaZ3961%",
+                                      dagshub_toc_tocen = "a1482d904ec14cd6e61aa6fcc9df96278dc7c911",
+                                      name_model = "Barrier_test_model")
+
+    data = tr.get_np_arr_from_csv(os.path.join(base_dir, "data", "final", "train_and_test", "test.csv"))
+
+    ret_data = tr.get_class_from_object(model,
+                                        data)
+    
+    np.savetxt(os.path.join(base_dir, "data", "raw", "tests", "ret_data.csv"), ret_data)
+
+# check_get_class_from_object()
 
 
 # --------------------------------------------------------------------
@@ -196,9 +225,9 @@ def one_obj_in_model():
     logging.info(f"norm_obj = {norm_obj}")
     logging.info(f"anom_obj = {anom_obj}")
 
-    model = tr.load_model_from_MlFlow(dagshub_toc_username = "",
-                                      dagshub_toc_pass = "",
-                                      dagshub_toc_tocen = "",
+    model = tr.load_model_from_MlFlow(dagshub_toc_username = "Dimitriy200",
+                                      dagshub_toc_pass = "RamZaZ3961%",
+                                      dagshub_toc_tocen = "a1482d904ec14cd6e61aa6fcc9df96278dc7c911",
                                       name_model = "Barrier_test_model")
     
     pred_Norm_obj = tr.start_predict_model(model, predict_data = norm_obj)
@@ -213,3 +242,5 @@ def one_obj_in_model():
 
 # one_obj_in_model()
 # --------------------------------------------------------------------
+
+# print(np.mean([0.01, 0.02, 0.03, 0.04, 0.05, 0.8, 0.07]))

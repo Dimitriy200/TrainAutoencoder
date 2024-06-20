@@ -33,6 +33,8 @@ src/train/test_check_model_from_dagsh.py
 src/train/train.py
 src/train/vars.env
 src/train/__pycache__/train.cpython-311.pyc
+src/train/logs/mse.log
+src/train/logs/train_logs.log
 src/train_and_valid_model.egg-info/PKG-INFO
 src/train_and_valid_model.egg-info/SOURCES.txt
 src/train_and_valid_model.egg-info/dependency_links.txt

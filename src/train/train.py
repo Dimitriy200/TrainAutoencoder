@@ -53,7 +53,7 @@ class Autoencoder_Model():
                                     mlfl_tr_username,
                                     url_to_remote_storage: str = "https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow",
                                     repo_owner = '',
-                                    repo_name = '',
+                                    repo_name = 'diplom_autoencoder',
                                     registered_model_name = "autoencoder_3",
                                     epochs = 5,
                                     batch_size = 80):
@@ -146,7 +146,7 @@ class Autoencoder_Model():
                   dagshub_toc_tocen,
                   epochs = 5,
                   batch_size = 50,
-                  name_model: str = "autoencoder2"):
+                  name_model: str = "Barrier_test_model"):
         
         train_data = self.get_np_arr_from_csv(path_to_train)
         valid_data = self.get_np_arr_from_csv(path_to_valid)
@@ -196,9 +196,37 @@ class Autoencoder_Model():
                             batch_size: int = 200) -> np.array:
 
         logging.info("START PREDICT")
-        res = model.predict(predict_data)
-        return res
+        res_data = model.predict(predict_data)
+
+        return res_data
         
+
+    @classmethod
+    def get_class_from_object(self,
+                            model: keras.Model,
+                            input_data: np.array,
+                            batch_size: int = 200,
+                            barrier_line = .1) -> np.array:
+        
+        logging.info("START GET CLASS OBJECT")
+        predicted_data = model.predict(input_data)
+
+        arr_mse = self.get_mse(input_data, predicted_data)
+
+        valid_arr = []
+        for mse in arr_mse:
+            if mse < barrier_line:
+                valid_arr.append(1)
+            else:
+                valid_arr.append(0)
+        
+        np_valid = np.array(valid_arr)
+        res_data = np.rot90(np.stack([arr_mse, np_valid]), k=1)
+        
+        logging.info(f"res_data = {res_data}")
+
+        return np_valid
+
 
     @classmethod
     def get_mse(self,
@@ -231,6 +259,31 @@ class Autoencoder_Model():
         logging.info(f"NP_RMSE = {np_rmse}")
 
         return np_rmse
+
+
+    @classmethod
+    def get_bin_acc(self,
+                    x_x_true: np.array,
+                    y_y_pred: np.array) -> np.array:
+        
+        ACC = keras.metrics.BinaryAccuracy(name="binary_accuracy", dtype=None, threshold=0.5)
+        ACC.update_state(x_x_true, y_y_pred)
+
+        res = ACC.result()
+
+        return res
+
+
+    @classmethod
+    def get_precision(self,
+                    x_x_true: np.array,
+                    y_y_pred: np.array) -> np.array:
+        
+        PREC = keras.metrics.Precision()
+        PREC.update_state(x_x_true, y_y_pred)
+        res = PREC.result()
+
+        return res
 
 
     @classmethod
@@ -302,7 +355,7 @@ class Autoencoder_Model():
                                dagshub_toc_pass,
                                dagshub_toc_tocen,
                                uri: str = "https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow",
-                               name_model: str = "autoencoder2",
+                               name_model: str = "Barrier_test_model",
                                version_model = "latest",):
         
         os.environ['MLFLOW_TRACKING_USERNAME'] = dagshub_toc_username
@@ -325,13 +378,13 @@ class Autoencoder_Model():
 
 
     @classmethod
-    def choise_result_barrier(self,
-                              path_choise_Normal,
-                              path_control_Normal,
-                              path_choise_Anomal,
-                              path_control_Anomal,
-                            #   path_out_data: str,
-                              model: keras.Model):
+    def choise_barrier_line(self,
+                    path_choise_Normal,
+                    path_control_Normal,
+                    path_choise_Anomal,
+                    path_control_Anomal,
+                #   path_out_data: str,
+                    model: keras.Model):
         
         barrier_line = 0
 
@@ -382,27 +435,69 @@ class Autoencoder_Model():
 
         all_mse = np.concatenate([metrics_mse_Normal, metrics_mse_Anomal])
 
-        barrier_line = np.array((max(rsh_metrics_mse_Anomal[:, 0]) + min(rsh_metrics_mse_Normal[:, 0])) / 2)
+        # barrier_line = np.array((max(rsh_metrics_mse_Anomal[:, 0]) + min(rsh_metrics_mse_Normal[:, 0])) / 2)
+        
         logging.info(f"barrier_line = {barrier_line}")
         
         all_mse = np.concatenate([rsh_metrics_mse_Normal, rsh_metrics_mse_Anomal], axis=0)
 
+        
+        # Подбор разделяющей поверхности
+        list_mse = all_mse[:, 0]
+        sort_list_mse = np.sort(list_mse, kind = 'mergesort')
+        logging.info(f"list_mse = {list_mse}, shapes = {list_mse.shape}")
+
+        barrier_store = []
+        acc_arr = []
+        for mse in sort_list_mse:
+            barrier_line = mse
+            valid_arr = []
+
+            for mse in list_mse:
+                if mse < barrier_line:
+                    valid_arr.append(1)
+                else:
+                    valid_arr.append(0)
+            
+            acc_m = self.get_bin_acc(all_mse[:, 1], valid_arr)
+            acc_arr.append(acc_m)
+            barrier_store.append(barrier_line)
+
+        # logging.info(f"acc_arr = {acc_arr}")
+        # logging.info(f"barrier_store = {barrier_store}")
+
+        max_acc = np.max(acc_arr)
+        logging.info(f"max_acc = {max_acc}")
+        index = 0
+        for i in acc_arr:
+            if i == max_acc:
+                break
+            
+            index += 1
+
+        res_barrier_line = barrier_store[index]
+        logging.info(f"index_max_acc = {index}")
+        logging.info(f"res_barrier_line = {res_barrier_line}")
+        
+        # Получим результат
         valid_arr = []
-        for mse in rsh_metrics_mse_Anomal[:, 0]:
-            if mse < barrier_line:
+        for mse in list_mse:
+            if mse < res_barrier_line:
                 valid_arr.append(1)
             else:
                 valid_arr.append(0)
         
+        # Собираем все данные в единый фрейм    =>    [mse,   True_Class,   Predict_Class]
         np_valid_arr = np.array(valid_arr)
         d_valid_arr = np.atleast_2d(np_valid_arr)
-        rsh_valid_arr = np.rot90(d_valid_arr, k= 1)
+        rsh_valid_arr = np.rot90(d_valid_arr, k= -1)
+        logging.info(f"rsh_valid_arr = {rsh_valid_arr}")
 
-        mse_met_anom = np.column_stack((rsh_metrics_mse_Anomal, rsh_valid_arr))
-        logging.info(f"np_valid_arr = {mse_met_anom}")
+        mse_met_ALL = np.column_stack((all_mse, rsh_valid_arr))
+        logging.info(f"np_valid_arr = {mse_met_ALL}")
 
 
-        return rsh_metrics_mse_Normal, rsh_metrics_mse_Anomal, mse_met_anom
+        return res_barrier_line, mse_met_ALL
 
 
     @classmethod
