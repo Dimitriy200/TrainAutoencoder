@@ -4,3 +4,4 @@ dagshub>=0.3.27
 setuptools==57.5.0
 mlflow
 h5py==3.11.0
+pydantic==2.7.4
