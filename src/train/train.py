@@ -72,7 +72,7 @@ class Autoencoder_Model():
         predict_data = self.get_np_arr_from_csv(path_Predict_Data)
 
         # new_model = self.create_default_model()
-        new_model = self.create_sparse_autoencoders()
+        new_model = self.create_contractive_autoencoder()
 
         dagshub.init(repo_owner=repo_owner, repo_name=repo_name, mlflow=True)
         mlflow.set_tracking_uri(url_to_remote_storage)    #https://dagshub.com/Dimitriy200/diplom_autoencoder.mlflow
@@ -143,6 +143,8 @@ class Autoencoder_Model():
         
         return autoencoder_compressing
 
+# -----------------------------------------------------------------------------------------------
+
 
     # СОЗДАЕМ МОДЕЛЬ [Sparse Autoencoders]
     @classmethod
@@ -161,6 +163,37 @@ class Autoencoder_Model():
             
             keras.layers.Dense(30, activation='elu'),
             keras.layers.Dense(input_dim, activation='elu')
+        ])
+
+        autoencoder_compressing.compile(optimizer = "adam",
+                            loss = ["mse"],
+                            metrics = [mae, rmse])
+
+        autoencoder_compressing.summary()
+        logging.info(autoencoder_compressing.summary())
+        
+        return autoencoder_compressing
+    
+# -----------------------------------------------------------------------------------------------
+    
+    
+        # СОЗДАЕМ МОДЕЛЬ [Contractive Autoencoder]
+    @classmethod
+    def create_contractive_autoencoder(self,
+                             input_dim: int = 26) -> keras.Model:
+
+        status_log = ["Create model has successfull", "Create model has error"]
+        mae = keras.metrics.MeanAbsoluteError()
+        rmse = keras.metrics.RootMeanSquaredError(name = "rmse")
+
+        autoencoder_compressing = keras.models.Sequential([
+            keras.layers.Dense(input_dim, activation='elu', input_shape=(input_dim, )),
+            keras.layers.Dense(16, activation='elu', activity_regularizer="L1"),
+            
+            keras.layers.Dense(10, activation='elu', activity_regularizer="L1"),
+            
+            keras.layers.Dense(16, activation='elu', activity_regularizer="L1"),
+            keras.layers.Dense(input_dim, activation='elu', activity_regularizer="L1")
         ])
 
         autoencoder_compressing.compile(optimizer = "adam",

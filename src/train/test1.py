@@ -132,11 +132,14 @@ def scatter_subplots(all_mse: np.array):
 
 
     # Рсуем график по отдельности
-    ax.scatter(all_mse[:, 0],
+    
+    # Для стабильных - 0
+    # Для аномальных - 1
+    ax.scatter(all_mse[:, 1],
                indexses,
                vmin=0)
     
-    plt.title("index and mse -> Classes true")
+    plt.title("index and mse -> Classes false")
     plt.xlabel("mse")
     plt.ylabel("index") 
     
